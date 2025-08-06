@@ -52,8 +52,7 @@ def main_menu():
         os.makedirs(music_folder)
 
     if os.path.exists(music_file):
-        from functions import split_music_file
-        split_music_file(music_file, music_folder)
+        split_and_move_files(music_file, music_folder)
 
     while True:
         print("\nMain Menu")
@@ -64,7 +63,7 @@ def main_menu():
         choice = input("Enter your choice: ").strip()
 
         if choice == '1':
-            split_music_file(music_file)
+            split_and_move_files(music_file)
             print("Song list refreshed!")
 
         elif choice == '2':
