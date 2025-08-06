@@ -1,9 +1,8 @@
 #import fnmatch
-from functions import *
-from UI import *
+import UI
 
 def main():
-  UI()
+  UI.main_menu()
 
 if __name__ == '__main__':
   main()
