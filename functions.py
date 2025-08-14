@@ -160,3 +160,5 @@ def calculate_pattern_score_improved(chromatic_counts, root_value, pattern):
     # Return a score that rewards in-scale notes and penalizes out-of-scale notes
     return (in_scale_score - out_of_scale_score) / total_notes
     
+
+

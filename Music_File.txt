@@ -22,3 +22,46 @@ E E E D E C D E A G A A A
 G A C4 B A A G A B A G F# E
 E G G G A B B G A C4 C4 C4 B A A ]x2
 E A A A G F# E D E C D E E 
+
+Nee rakthame Nee rakthame:
+chorus
+F G A A#
+F G A A# A# A A# C4 A# G#
+G A D# G G# A# G# G F
+
+stanza
+F F C4 A# G# A# C4 
+A# A# G# A# C4 A# G# G F ]x2
+F G A A# A A# C A# G# G A D#
+G# A# G# G F
+
+Saagilapadi mrokkada:
+chorus
+C E E E F G F E D B2 C
+C E E E F D E F G G 
+G G G F G Bb A G
+E F D E C
+C E E E F G F E D B2 C
+
+stanza
+E F G G F E F G G G F E F A A A A ]x2
+A# C A# A# G
+G B B B B B C4 D4 D4 E4 C4 
+A# A# G A# G F E F G F E (E F G B)
+B B B B B C4 D4 D4 E4 C4 A# A# G A# G
+F E F G F E (E F G C) 
+
+Yesu chavonde silovapai:
+chorus
+C# C# D E A G# F# E D C#
+C# C# D E 
+A G# B A
+
+stanza
+A C#4 C#4 A C#4 C#4 	|
+D B C#4 B			|
+G# B B G# B B		| Based on congregation
+C#4 A B A			|
+A A G# A G# F# E	|
+G# G# F# G# F# E	|x2
+C# C# D E G# G# A C#4 G# A
