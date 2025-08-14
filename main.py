@@ -1,7 +1,4 @@
-#import fnmatch
 import UI
-import functions
-import os
 
 def main():
   UI.main_menu()
