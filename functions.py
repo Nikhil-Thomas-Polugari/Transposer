@@ -81,8 +81,8 @@ def detect_key_signature(filepath):
         "aeolian": [0, 2, 3, 5, 7, 8, 10]         # 1 2 b3 4 5 b6 b7
     }
     
-    # Count all notes in the file
-    note_counts = {}
+    # Convert all notes to their chromatic values, combining enharmonic equivalents
+    chromatic_counts = [0] * 12
     
     with open(filepath, 'r') as f:
         content = f.read()
@@ -93,21 +93,24 @@ def detect_key_signature(filepath):
         
         for note in matches:
             if note in NOTES:
-                note_counts[note] = note_counts.get(note, 0) + 1
+                chromatic_value = NOTES[note]
+                chromatic_counts[chromatic_value] += 1
     
-    if not note_counts:
+    if sum(chromatic_counts) == 0:
         return "C major"  # Default if no notes found
     
     # Find the best matching key signature
     best_match = ("C", "major", 0)
     
-    # Test each possible root note
-    for root_note in NOTES:
+    # Test each possible root note (only use natural notes and common accidentals)
+    test_roots = ["C", "C#", "Db", "D", "D#", "Eb", "E", "F", "F#", "Gb", "G", "G#", "Ab", "A", "A#", "Bb", "B"]
+    
+    for root_note in test_roots:
         root_value = NOTES[root_note]
         
         # Test each scale pattern
         for scale_name, pattern in SCALE_PATTERNS.items():
-            score = calculate_pattern_score(note_counts, root_value, pattern)
+            score = calculate_pattern_score_improved(chromatic_counts, root_value, pattern)
             
             if score > best_match[2]:
                 # Convert scale names for output
@@ -119,27 +122,41 @@ def detect_key_signature(filepath):
     return f"{best_match[0]} {best_match[1]}"
 
 
-def calculate_pattern_score(note_counts, root_value, pattern):
-    """Calculate how well the note counts match a given scale pattern"""
-    score = 0
-    total_notes = sum(note_counts.values())
+def calculate_pattern_score_improved(chromatic_counts, root_value, pattern):
+    """Calculate how well the chromatic counts match a given scale pattern"""
+    total_notes = sum(chromatic_counts)
     
     if total_notes == 0:
         return 0
     
-    # Check each note in the scale pattern
-    for interval in pattern:
-        target_note_value = (root_value + interval) % 12
-        
-        # Find all note names that match this chromatic value
-        matching_notes = [note for note, value in NOTES.items() if value == target_note_value]
-        
-        # Add score for any matching notes found in the song
-        for note_name in matching_notes:
-            if note_name in note_counts:
-                score += note_counts[note_name]
-                break  # Only count the first match to avoid double counting
+    # Calculate scores for notes in the scale vs notes outside the scale
+    in_scale_score = 0
+    out_of_scale_score = 0
     
-    # Return normalized score (0-1)
-    return score / total_notes
+    for chromatic_value in range(12):
+        note_count = chromatic_counts[chromatic_value]
+        interval_from_root = (chromatic_value - root_value) % 12
+        
+        if interval_from_root in pattern:
+            # This note is in the scale - add to positive score
+            # Give extra weight to root, fifth, and third
+            weight = 1.0
+            if interval_from_root == 0:  # Root
+                weight = 3.0
+            elif interval_from_root == 7:  # Fifth
+                weight = 2.0
+            elif interval_from_root in [4, 3]:  # Major/minor third
+                weight = 1.5
+            
+            in_scale_score += note_count * weight
+        else:
+            # This note is outside the scale - penalize
+            out_of_scale_score += note_count * 0.5
+    
+    # Calculate final score (favor scales with high in-scale notes and low out-of-scale notes)
+    if total_notes == 0:
+        return 0
+    
+    # Return a score that rewards in-scale notes and penalizes out-of-scale notes
+    return (in_scale_score - out_of_scale_score) / total_notes
     
