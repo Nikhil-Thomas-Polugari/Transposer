@@ -102,15 +102,16 @@ def main_menu():
                 selected_song = songs[int(song_choice) - 1]
                 filepath = os.path.join(music_folder, selected_song)
 
-                if filepath not in songs_and_keys:
-                    key = detect_key_signature(filepath)
-                    songs_and_keys[filepath] = key
+                # Get current key signature
+                current_key = detect_key_signature(filepath)
+                print(f"Current key: {current_key}")
 
-                # Sanitize the song file before transposing
-                sanitize_song_file(filepath)
-
+                # Get target key
                 note, key_type = get_target_key()
-                transpose({filepath: songs_and_keys[filepath]}, note, key_type, octave_base=3)
+                
+                # Use the new song_transpose function
+                from functions import song_transpose
+                song_transpose(filepath, note, key_type)
             else:
                 print("Invalid choice.")
 

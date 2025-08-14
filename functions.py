@@ -159,6 +159,137 @@ def calculate_pattern_score_improved(chromatic_counts, root_value, pattern):
     
     # Return a score that rewards in-scale notes and penalizes out-of-scale notes
     return (in_scale_score - out_of_scale_score) / total_notes
+
+
+def song_transpose(input_filepath, target_note, target_scale, output_filepath=None):
+    """
+    Transpose a song to a target note and scale pattern.
+    Handles octave indicators (2 for below, 4 for above).
+    
+    Args:
+        input_filepath (str): Path to the input song file
+        target_note (str): Target root note (e.g., "Bb", "C#")
+        target_scale (str): Target scale pattern ("major", "minor", etc.)
+        output_filepath (str): Output file path (optional, defaults to input_file_transposed.txt)
+    """
+    if output_filepath is None:
+        base_name = os.path.splitext(input_filepath)[0]
+        output_filepath = f"{base_name}_transposed.txt"
+    
+    # Detect the current key of the song
+    current_key_str = detect_key_signature(input_filepath)
+    current_parts = current_key_str.split()
+    current_note = current_parts[0]
+    current_scale = current_parts[1]
+    
+    # Calculate the transposition interval
+    current_root_value = NOTES[current_note]
+    target_root_value = NOTES[target_note]
+    transpose_interval = (target_root_value - current_root_value) % 12
+    
+    # Read the original song content
+    with open(input_filepath, 'r') as f:
+        content = f.read()
+    
+    # Function to transpose a single note
+    def transpose_note(match):
+        note_with_octave = match.group(0)
+        note_name = match.group(1)
+        
+        # Extract octave indicator if present
+        octave_match = re.search(r'(\d+)$', note_with_octave)
+        current_octave = int(octave_match.group(1)) if octave_match else 3  # Default to middle octave
+        
+        # Get the chromatic value of the original note
+        original_value = NOTES[note_name]
+        
+        # Calculate the new chromatic value
+        new_value = (original_value + transpose_interval) % 12
+        
+        # Find the best enharmonic spelling for the new note
+        new_note_name = get_best_note_name(new_value, target_note, target_scale)
+        
+        # Calculate octave change
+        octave_change = 0
+        if original_value + transpose_interval >= 12:
+            octave_change = (original_value + transpose_interval) // 12
+        elif original_value + transpose_interval < 0:
+            octave_change = -1
+            
+        new_octave = current_octave + octave_change
+        
+        # Handle octave indicators
+        if new_octave == 2:
+            return f"{new_note_name}2"
+        elif new_octave == 4:
+            return f"{new_note_name}4"
+        elif new_octave != 3:  # Only add octave indicator if not middle octave
+            return f"{new_note_name}{new_octave}"
+        else:
+            return new_note_name
+    
+    # Pattern to match notes with optional octave indicators
+    note_pattern = r'\b([A-G](?:#|b)?)(\d*)\b'
+    
+    # Replace all notes in the content
+    transposed_content = re.sub(note_pattern, transpose_note, content)
+    
+    # Write the transposed content to the output file
+    with open(output_filepath, 'w') as f:
+        f.write(transposed_content)
+    
+    print(f"Song transposed from {current_key_str} to {target_note} {target_scale}")
+    print(f"Transposed song saved to: {output_filepath}")
+    
+    return output_filepath
+
+
+def get_best_note_name(chromatic_value, target_root, target_scale):
+    """
+    Get the best enharmonic spelling for a note based on the target key signature.
+    """
+    # Common note names for each chromatic value
+    note_options = {
+        0: ["C", "B#"],
+        1: ["C#", "Db"],
+        2: ["D"],
+        3: ["D#", "Eb"],
+        4: ["E", "Fb"],
+        5: ["F", "E#"],
+        6: ["F#", "Gb"],
+        7: ["G"],
+        8: ["G#", "Ab"],
+        9: ["A"],
+        10: ["A#", "Bb"],
+        11: ["B", "Cb"]
+    }
+    
+    # Get possible note names
+    possible_names = note_options.get(chromatic_value, [])
+    
+    if len(possible_names) == 1:
+        return possible_names[0]
+    
+    # Prefer spellings that match the key signature context
+    target_root_value = NOTES[target_root]
+    
+    # For major keys, prefer sharps for sharp keys, flats for flat keys
+    if target_scale == "major":
+        # Sharp keys: G, D, A, E, B, F#, C#
+        if target_root in ["G", "D", "A", "E", "B", "F#", "C#"]:
+            # Prefer sharp spellings
+            for name in possible_names:
+                if "#" in name:
+                    return name
+        # Flat keys: F, Bb, Eb, Ab, Db, Gb, Cb
+        elif target_root in ["F", "Bb", "Eb", "Ab", "Db", "Gb"]:
+            # Prefer flat spellings
+            for name in possible_names:
+                if "b" in name:
+                    return name
+    
+    # Default to the first option
+    return possible_names[0]
     
 
 
