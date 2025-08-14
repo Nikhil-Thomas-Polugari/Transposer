@@ -68,18 +68,69 @@ def split_and_move_files(file):
 #C_AEOLIAN = [0, 2, 3, 5, 7, 8, 10, 0]
 
 def detect_key_signature(filepath):
-    NOTES_SHARP = {"F#" : 0, "C#" : 0, "G#" : 0, "D#" : 0, "A#" : 0, "E#" : 0, "B#" : 0}
-    NOTES_FLAT = {"Bb" : 0, "Eb" : 0, "Ab" : 0, "Db" : 0, "Gb" : 0, "Cb" : 0, "Fb" : 0}
-    NOTES_NATURAL = {"B" : 0, "E" : 0, "A" : 0, "D" : 0, "G" : 0, "C" : 0, "F" : 0}
+    # Scale patterns from comments above
+    MAJOR_PATTERN = [0, 2, 4, 5, 7, 9, 11]  # 1 2 3 4 5 6 7
+    NATURAL_MINOR_PATTERN = [0, 2, 3, 5, 7, 8, 10]  # 1 2 b3 4 5 b6 b7
+    HARMONIC_MINOR_PATTERN = [0, 2, 3, 5, 7, 8, 11]  # 1 2 b3 4 5 b6 7
+    MELODIC_MINOR_PATTERN = [0, 2, 3, 5, 7, 9, 11]  # 1 2 b3 4 5 6 7
+    DORIAN_PATTERN = [0, 2, 3, 5, 7, 9, 10]  # 1 2 b3 4 5 6 b7
+    PHRYGIAN_PATTERN = [0, 1, 3, 5, 7, 8, 10]  # 1 b2 b3 4 5 b6 b7
+    LYDIAN_PATTERN = [0, 2, 4, 6, 7, 9, 11]  # 1 2 3 #4 5 6 7
+    MIXOLYDIAN_PATTERN = [0, 2, 4, 5, 7, 9, 10]  # 1 2 3 4 5 6 b7
+    
+    # Count note occurrences
+    note_counts = {}
+    
     with open(filepath, 'r') as f:
         content = f.read()
-        for note in NOTES_SHARP:
-            if note in content:
-                NOTES_SHARP[note] += 1
-        for note in NOTES_FLAT:
-            if note in content:
-                NOTES_FLAT[note] += 1
-        for note in NOTES_NATURAL:
-            if note in content:
-                NOTES_NATURAL[note] += 1
+        
+        # Extract all notes from the content
+        note_pattern = r'\b([A-G](?:#|b)?)\d*\b'
+        matches = re.findall(note_pattern, content)
+        
+        for note in matches:
+            if note in NOTES:
+                if note not in note_counts:
+                    note_counts[note] = 0
+                note_counts[note] += 1
+    
+    if not note_counts:
+        return "C major"  # Default if no notes found
+    
+    # Find the most likely key by testing each root note with different patterns
+    best_match = ("C", "major", 0)
+    
+    for root_note in NOTES:
+        root_value = NOTES[root_note]
+        
+        # Test major pattern
+        major_score = calculate_pattern_score(note_counts, root_value, MAJOR_PATTERN)
+        if major_score > best_match[2]:
+            best_match = (root_note, "major", major_score)
+        
+        # Test natural minor pattern
+        minor_score = calculate_pattern_score(note_counts, root_value, NATURAL_MINOR_PATTERN)
+        if minor_score > best_match[2]:
+            best_match = (root_note, "minor", minor_score)
+    
+    return f"{best_match[0]} {best_match[1]}"
+
+def calculate_pattern_score(note_counts, root_value, pattern):
+    """Calculate how well the note counts match a given scale pattern"""
+    score = 0
+    total_notes = sum(note_counts.values())
+    
+    if total_notes == 0:
+        return 0
+    
+    for interval in pattern:
+        target_note_value = (root_value + interval) % 12
+        # Find the note name that matches this value
+        for note_name, note_value in NOTES.items():
+            if note_value == target_note_value and note_name in note_counts:
+                # Weight the score by how frequently this note appears
+                score += note_counts[note_name]
+                break
+    
+    return score / total_notes
     
