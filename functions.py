@@ -68,18 +68,78 @@ def split_and_move_files(file):
 #C_AEOLIAN = [0, 2, 3, 5, 7, 8, 10, 0]
 
 def detect_key_signature(filepath):
-    NOTES_SHARP = {"F#" : 0, "C#" : 0, "G#" : 0, "D#" : 0, "A#" : 0, "E#" : 0, "B#" : 0}
-    NOTES_FLAT = {"Bb" : 0, "Eb" : 0, "Ab" : 0, "Db" : 0, "Gb" : 0, "Cb" : 0, "Fb" : 0}
-    NOTES_NATURAL = {"B" : 0, "E" : 0, "A" : 0, "D" : 0, "G" : 0, "C" : 0, "F" : 0}
+    # Scale patterns from comments (semitone intervals)
+    SCALE_PATTERNS = {
+        "major": [0, 2, 4, 5, 7, 9, 11],          # 1 2 3 4 5 6 7
+        "natural_minor": [0, 2, 3, 5, 7, 8, 10],  # 1 2 b3 4 5 b6 b7
+        "harmonic_minor": [0, 2, 3, 5, 7, 8, 11], # 1 2 b3 4 5 b6 7
+        "melodic_minor": [0, 2, 3, 5, 7, 9, 11],  # 1 2 b3 4 5 6 7
+        "dorian": [0, 2, 3, 5, 7, 9, 10],         # 1 2 b3 4 5 6 b7
+        "phrygian": [0, 1, 3, 5, 7, 8, 10],       # 1 b2 b3 4 5 b6 b7
+        "lydian": [0, 2, 4, 6, 7, 9, 11],         # 1 2 3 #4 5 6 7
+        "mixolydian": [0, 2, 4, 5, 7, 9, 10],     # 1 2 3 4 5 6 b7
+        "aeolian": [0, 2, 3, 5, 7, 8, 10]         # 1 2 b3 4 5 b6 b7
+    }
+    
+    # Count all notes in the file
+    note_counts = {}
+    
     with open(filepath, 'r') as f:
         content = f.read()
-        for note in NOTES_SHARP:
-            if note in content:
-                NOTES_SHARP[note] += 1
-        for note in NOTES_FLAT:
-            if note in content:
-                NOTES_FLAT[note] += 1
-        for note in NOTES_NATURAL:
-            if note in content:
-                NOTES_NATURAL[note] += 1
+        
+        # Extract notes using regex (matches note names followed by optional # or b)
+        note_pattern = r'\b([A-G](?:#|b)?)\d*\b'
+        matches = re.findall(note_pattern, content)
+        
+        for note in matches:
+            if note in NOTES:
+                note_counts[note] = note_counts.get(note, 0) + 1
+    
+    if not note_counts:
+        return "C major"  # Default if no notes found
+    
+    # Find the best matching key signature
+    best_match = ("C", "major", 0)
+    
+    # Test each possible root note
+    for root_note in NOTES:
+        root_value = NOTES[root_note]
+        
+        # Test each scale pattern
+        for scale_name, pattern in SCALE_PATTERNS.items():
+            score = calculate_pattern_score(note_counts, root_value, pattern)
+            
+            if score > best_match[2]:
+                # Convert scale names for output
+                display_name = scale_name.replace("natural_", "").replace("_", " ")
+                if display_name == "aeolian":
+                    display_name = "minor"
+                best_match = (root_note, display_name, score)
+    
+    return f"{best_match[0]} {best_match[1]}"
+
+
+def calculate_pattern_score(note_counts, root_value, pattern):
+    """Calculate how well the note counts match a given scale pattern"""
+    score = 0
+    total_notes = sum(note_counts.values())
+    
+    if total_notes == 0:
+        return 0
+    
+    # Check each note in the scale pattern
+    for interval in pattern:
+        target_note_value = (root_value + interval) % 12
+        
+        # Find all note names that match this chromatic value
+        matching_notes = [note for note, value in NOTES.items() if value == target_note_value]
+        
+        # Add score for any matching notes found in the song
+        for note_name in matching_notes:
+            if note_name in note_counts:
+                score += note_counts[note_name]
+                break  # Only count the first match to avoid double counting
+    
+    # Return normalized score (0-1)
+    return score / total_notes
     
