@@ -1,7 +1,7 @@
 
 import os
 import re
-from functions import *
+from functions import split_and_move_files, detect_key_signature, song_transpose
 
 def get_target_key():
     NOTES = {
