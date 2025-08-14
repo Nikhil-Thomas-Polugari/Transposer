@@ -1,4 +1,3 @@
-
 import os
 import re
 from functions import split_and_move_files, detect_key_signature, song_transpose
