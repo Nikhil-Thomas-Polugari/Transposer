@@ -16,12 +16,3 @@ deploymentTarget = "cloudrun"
 
 [workflows]
 runButton = "Music Tool"
-
-[[workflows.workflow]]
-name = "Music Tool"
-author = 2494520
-mode = "sequential"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "python main.py"
