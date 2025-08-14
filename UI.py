@@ -1,6 +1,7 @@
 import os
 import re
 from functions import split_and_move_files, detect_key_signature, song_transpose
+from Scales_and_chords import scale_display, chord_family
 
 def get_target_key():
     NOTES = {
@@ -84,10 +85,12 @@ def main_menu():
         print("4. Transpose a song")
         print("5. View transposed songs")
         print("6. Compare original and transposed versions")
-        print("7. Exit")
+        print("7. Display scale notes")
+        print("8. Display chord family")
+        print("9. Exit")
         print("-"*50)
         
-        choice = input("Enter your choice (1-7): ").strip()
+        choice = input("Enter your choice (1-9): ").strip()
 
         if choice == '1':
             if os.path.exists(music_file):
@@ -253,12 +256,49 @@ def main_menu():
             print(f"{'='*80}")
 
         elif choice == '7':
+            # Display scale notes
+            print(f"\n{'='*60}")
+            print("SCALE DISPLAY")
+            print(f"{'='*60}")
+            
+            note, key_type = get_target_key()
+            scale_notes = scale_display(note, key_type)
+            
+            if isinstance(scale_notes, str):  # Error message
+                print(f"❌ {scale_notes}")
+            else:
+                print(f"\n{note} {key_type} scale notes:")
+                print(" - ".join(scale_notes))
+                print(f"\nScale pattern: {' '.join([f'{i+1}' for i in range(len(scale_notes))])}")
+                print(f"Notes:         {' '.join(scale_notes)}")
+
+        elif choice == '8':
+            # Display chord family
+            print(f"\n{'='*60}")
+            print("CHORD FAMILY DISPLAY")
+            print(f"{'='*60}")
+            
+            note, key_type = get_target_key()
+            chord_family_result = chord_family(note, key_type)
+            
+            if isinstance(chord_family_result, str):  # Error message
+                print(f"❌ {chord_family_result}")
+            else:
+                print(f"\n{note} {key_type} chord family:")
+                print("-" * 40)
+                
+                for chord_name, chord_info in chord_family_result.items():
+                    notes_str = " - ".join(chord_info["notes"])
+                    chord_type = chord_info["type"]
+                    print(f"{chord_name:15} | {notes_str:20} | {chord_type}")
+
+        elif choice == '9':
             print("\n👋 Thank you for using the Music Analysis & Transposition Tool!")
             print("Goodbye!")
             break
             
         else:
-            print("❌ Invalid choice. Please enter a number between 1 and 7.")
+            print("❌ Invalid choice. Please enter a number between 1 and 9.")
 
 if __name__ == "__main__":
     main_menu()
