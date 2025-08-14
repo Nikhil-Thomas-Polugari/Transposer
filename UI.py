@@ -32,12 +32,10 @@ def get_target_key():
         return note, key_type
 
 def list_songs(directory):
-    files = [f for f in os.listdir(directory) if f.endswith('.txt') and 'transposed' not in f]
-    return files
+    return [f for f in os.listdir(directory) if f.endswith('.txt') and 'transposed' not in f]
 
 def list_transposed_songs(directory):
-    files = [f for f in os.listdir(directory) if f.endswith('.txt') and 'transposed' in f]
-    return files
+    return [f for f in os.listdir(directory) if f.endswith('.txt') and 'transposed' in f]
 
 def display_song(filepath):
     with open(filepath, 'r') as f:

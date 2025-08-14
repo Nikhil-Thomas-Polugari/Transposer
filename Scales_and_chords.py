@@ -35,9 +35,6 @@ def get_best_note_name(chromatic_value, target_root, target_scale):
     if len(possible_names) == 1:
         return possible_names[0]
 
-    # Prefer spellings that match the key signature context
-    target_root_value = NOTES[target_root]
-
     # For major keys, prefer sharps for sharp keys, flats for flat keys
     if target_scale == "major":
         # Sharp keys: G, D, A, E, B, F#, C#
