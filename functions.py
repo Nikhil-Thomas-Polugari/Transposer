@@ -9,7 +9,7 @@ NOTES_REVERSED = {v: k for k, v in NOTES.items()}
 
 
 
-def split_and_move_files(file):
+def split_and_move_files(file, destination_place):
     titles = []
     songs = []
     song_indices = []
@@ -30,7 +30,7 @@ def split_and_move_files(file):
         with open(titles[i], 'w') as f_out:
             f_out.writelines(lines[start:end])
 
-    dest_folder = os.path.join(os.getcwd(), "Music_Notes")
+    dest_folder = os.path.join(os.getcwd(), destination_place)
     for title in titles:
         shutil.move(os.path.join(os.getcwd(), title), os.path.join(dest_folder, title))
 
